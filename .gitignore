@@ -1,0 +1,57 @@
+# Dependencies & package locks
+node_modules/
+package-lock.json
+
+# Build and distribution outputs
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Tool logs and IDE specific artifacts
+.gemini/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment and sensitive keys
+.env
+.env.*
+!.env.example
+
+# Runtime temporary uploads and intermediate outputs
+ai_detection/tmp_uploads/
+tmp_uploads/
+outputs/api/gradcam/*.png
+ai_detection/outputs/api/gradcam/*.png
+
+# Dataset images (Preserve dataset_info.json, exclude raw image data)
+ai_detection/data/train/
+ai_detection/data/val/
+ai_detection/data/test/
+data/train/
+data/val/
+data/test/
