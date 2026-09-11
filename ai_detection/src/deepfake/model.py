@@ -23,8 +23,12 @@ class DeepFakeResNet(nn.Module):
         ])
 
     def forward(self, x):
-        """Expect a batch of BGR OpenCV images (uint8). Convert to RGB inside."""
-        # Convert BGR -> RGB and apply preprocessing per image
+        """Expect a batch of BGR OpenCV images (uint8), a single image, or a pre-processed tensor batch."""
+        if isinstance(x, torch.Tensor) and x.ndim == 4:
+            # If x is already a batch tensor (e.g. from DataLoader), pass straight to backbone
+            return self.backbone(x)
+        
+        # Otherwise, assume OpenCV BGR arrays and apply preprocessing
         if isinstance(x, list):
             tensors = [self.preprocess(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)) for img in x]
             x = torch.stack(tensors)
@@ -32,6 +36,11 @@ class DeepFakeResNet(nn.Module):
             # single image
             img = cv2.cvtColor(x, cv2.COLOR_BGR2RGB)
             x = self.preprocess(img).unsqueeze(0)
+            
+        # Ensure tensor is on the correct device (the same as the model)
+        device = next(self.backbone.parameters()).device
+        x = x.to(device)
+            
         return self.backbone(x)
 
 def build_deepfake_model(pretrained: bool = True, device: str = "cpu"):

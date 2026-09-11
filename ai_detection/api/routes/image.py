@@ -93,11 +93,11 @@ async def analyze_image(file: UploadFile = File(...)):
         # Return response with relative URL for static serving
         rel_url = f"/static/gradcam/{gradcam_path.name}"
         return ImageResponse(
-            predicted_class=pred_class,
-            ai_probability=ai_prob,
-            real_probability=real_prob,
-            confidence=confidence,
-            gradcam_path=rel_url,
+            predicted_class=str(pred_class),
+            ai_probability=float(ai_prob),
+            real_probability=float(real_prob),
+            confidence=float(confidence),
+            gradcam_path=str(rel_url),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

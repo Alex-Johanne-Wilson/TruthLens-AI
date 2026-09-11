@@ -243,6 +243,32 @@ export default function DeepfakeView() {
             borderRadius: '8px',
             border: '1px solid var(--border-subtle)'
           }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Overall Prediction</div>
+                <div style={{ 
+                  fontSize: '18px', 
+                  fontWeight: 700, 
+                  color: apiResponse.overall_prediction === 'fake' ? 'var(--status-ai)' : 'var(--cyber-cyan)' 
+                }}>
+                  {apiResponse.overall_prediction ? apiResponse.overall_prediction.toUpperCase() : 'UNKNOWN'}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Confidence Score</div>
+                <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {apiResponse.confidence_score ? (apiResponse.confidence_score * 100).toFixed(1) + '%' : 'N/A'}
+                </div>
+              </div>
+            </div>
+
+            {apiResponse.summary && (
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', display: 'flex', gap: '16px', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
+                <span>Analyzed Faces: {apiResponse.summary.total_analyzed_faces}</span>
+                <span>Fake Frames: {apiResponse.summary.percentage_fake_predictions?.toFixed(1) || 0}%</span>
+              </div>
+            )}
+
             <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
               Backend Response Message:
             </div>
@@ -290,39 +316,55 @@ export default function DeepfakeView() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-          {prototypeTimeline.map((item, idx) => (
-            <div
-              key={idx}
-              style={{
-                backgroundColor: 'rgba(5, 8, 17, 0.5)',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid var(--border-subtle)'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
-                <span className="mono">PTS: {item.frame}</span>
-                <span className="badge badge-pending" style={{ fontSize: '8px' }}>Pending</span>
+          {(apiResponse?.frames && apiResponse.frames.length > 0 ? apiResponse.frames : prototypeTimeline).map((item, idx) => {
+            const isActualFrame = !!item.faces;
+            const timeStr = isActualFrame 
+              ? new Date(item.timestamp * 1000).toISOString().substr(14, 5) 
+              : item.frame;
+              
+            const face = isActualFrame && item.faces.length > 0 ? item.faces[0] : null;
+            const statusLabel = face ? (face.pred_class === 0 ? 'FAKE' : 'REAL') : (isActualFrame ? 'NO FACE' : item.status);
+            const statusColor = face ? (face.pred_class === 0 ? 'var(--status-ai)' : 'var(--cyber-cyan)') : 'var(--text-muted)';
+            const conf = face ? (face.pred_class === 0 ? face.fake_prob : face.real_prob) : null;
+            
+            return (
+              <div
+                key={idx}
+                style={{
+                  backgroundColor: 'rgba(5, 8, 17, 0.5)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-subtle)'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
+                  <span className="mono">PTS: {timeStr}</span>
+                  <span className="badge" style={{ fontSize: '8px', borderColor: statusColor, color: statusColor }}>
+                    {statusLabel.toUpperCase()}
+                  </span>
+                </div>
+                <div style={{
+                  height: '60px',
+                  margin: '8px 0',
+                  backgroundColor: '#000000',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '10px',
+                  color: 'var(--text-muted)',
+                  fontFamily: 'var(--font-mono)'
+                }}>
+                  {face ? `Face Det: ${face.bbox.map(n => Math.round(n)).join(',')}` : '[Facial Keypoint ROI]'}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  Confidence: <span className="mono" style={{ color: 'var(--text-primary)' }}>
+                    {conf !== null ? (conf * 100).toFixed(1) + '%' : 'N/A'}
+                  </span>
+                </div>
               </div>
-              <div style={{
-                height: '60px',
-                margin: '8px 0',
-                backgroundColor: '#000000',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '10px',
-                color: 'var(--text-muted)',
-                fontFamily: 'var(--font-mono)'
-              }}>
-                [Facial Keypoint ROI]
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                Anomaly Delta: <span className="mono" style={{ color: 'var(--text-muted)' }}>N/A</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

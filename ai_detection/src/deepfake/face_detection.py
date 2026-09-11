@@ -24,13 +24,13 @@ def detect_faces(frame: "numpy.ndarray", detector, padding: float = 0.2):
         # Apply padding
         pad_w = int(fw * padding)
         pad_h = int(fh * padding)
-        x1 = max(x - pad_w, 0)
-        y1 = max(y - pad_h, 0)
-        x2 = min(x + fw + pad_w, w)
-        y2 = min(y + fh + pad_h, h)
+        x1 = int(max(x - pad_w, 0))
+        y1 = int(max(y - pad_h, 0))
+        x2 = int(min(x + fw + pad_w, w))
+        y2 = int(min(y + fh + pad_h, h))
         crop = frame[y1:y2, x1:x2]
         results.append({
-            "bbox": (x1, y1, x2, y2),
+            "bbox": [x1, y1, x2, y2],
             "crop": crop,
         })
     return results
