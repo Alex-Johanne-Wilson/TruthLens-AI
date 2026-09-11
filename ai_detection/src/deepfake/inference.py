@@ -10,23 +10,7 @@ from .model import build_deepfake_model
 # ------------------------------------------------------------
 
 def infer_frame(frame_dict, model, detector, device="cpu"):
-    """Run face detection and deepfake classification on a single frame.
-
-    Parameters
-    ----------
-    frame_dict: dict with keys "index", "timestamp", "frame" (BGR ndarray)
-    model: torch.nn.Module ready for inference
-    detector: OpenCV cascade classifier
-    device: torch device string
-
-    Returns
-    -------
-    dict with original frame info plus a list of face predictions.
-    Each face prediction contains:
-        - bbox (x1, y1, x2, y2)
-        - fake_prob, real_prob
-        - pred_class (0=fake, 1=real)
-    """
+    """Run face detection and deepfake classification on a single frame."""
     frame = frame_dict["frame"]
     faces = detect_faces(frame, detector)
     results = []
@@ -36,17 +20,18 @@ def infer_frame(frame_dict, model, detector, device="cpu"):
         with torch.no_grad():
             logits = model(crop)
             probs = torch.softmax(logits, dim=1).squeeze().cpu().numpy()
-        fake_prob, real_prob = float(probs[0]), float(probs[1])
-        pred_class = int(probs.argmax())
+        fake_prob = float(probs[0].item() if hasattr(probs[0], "item") else probs[0])
+        real_prob = float(probs[1].item() if hasattr(probs[1], "item") else probs[1])
+        pred_class = int(probs.argmax().item() if hasattr(probs.argmax(), "item") else probs.argmax())
         results.append({
-            "bbox": face["bbox"],
+            "bbox": [int(b) for b in face["bbox"]],
             "fake_prob": fake_prob,
             "real_prob": real_prob,
             "pred_class": pred_class,
         })
     out = {
-        "frame_index": frame_dict["index"],
-        "timestamp": frame_dict["timestamp"],
+        "frame_index": int(frame_dict["index"]),
+        "timestamp": float(frame_dict["timestamp"]),
         "faces": results,
     }
     return out
@@ -56,28 +41,28 @@ def aggregate_video_results(frame_results, fake_threshold=0.5):
 
     Returns a dict containing counts and averaged probabilities.
     """
-    total_frames = len(frame_results)
-    frames_with_faces = sum(1 for fr in frame_results if fr["faces"])
-    total_faces = sum(len(fr["faces"]) for fr in frame_results)
+    total_frames = int(len(frame_results))
+    frames_with_faces = int(sum(1 for fr in frame_results if fr["faces"]))
+    total_faces = int(sum(len(fr["faces"]) for fr in frame_results))
     if total_faces == 0:
         avg_fake = avg_real = 0.0
         fake_percent = 0.0
     else:
-        fake_probs = [f["fake_prob"] for fr in frame_results for f in fr["faces"]]
-        real_probs = [f["real_prob"] for fr in frame_results for f in fr["faces"]]
-        avg_fake = sum(fake_probs) / total_faces
-        avg_real = sum(real_probs) / total_faces
-        fake_percent = (sum(1 for p in fake_probs if p >= fake_threshold) / total_faces) * 100
+        fake_probs = [float(f["fake_prob"]) for fr in frame_results for f in fr["faces"]]
+        real_probs = [float(f["real_prob"]) for fr in frame_results for f in fr["faces"]]
+        avg_fake = float(sum(fake_probs) / total_faces)
+        avg_real = float(sum(real_probs) / total_faces)
+        fake_percent = float((sum(1 for p in fake_probs if p >= fake_threshold) / total_faces) * 100)
     video_pred = "fake" if avg_fake >= fake_threshold else "real"
     summary = {
         "total_sampled_frames": total_frames,
         "frames_with_faces": frames_with_faces,
-        "frames_without_faces": total_frames - frames_with_faces,
+        "frames_without_faces": int(total_frames - frames_with_faces),
         "total_analyzed_faces": total_faces,
-        "average_fake_prob": avg_fake,
-        "average_real_prob": avg_real,
-        "percentage_fake_predictions": fake_percent,
-        "video_prediction": video_pred,
+        "average_fake_prob": float(avg_fake),
+        "average_real_prob": float(avg_real),
+        "percentage_fake_predictions": float(fake_percent),
+        "video_prediction": str(video_pred),
     }
     return summary
 
@@ -85,6 +70,8 @@ def run_deepfake_inference(video_path: str, max_frames: int = 30, interval_secon
     """Full pipeline: load video, sample frames, detect faces, classify, aggregate.
     Returns a tuple (frame_results, summary).
     """
+    from ..utils import sanitize_for_serialization
+
     video_path = Path(video_path)
     if not video_path.exists():
         raise FileNotFoundError(f"Video file not found: {video_path}")
@@ -93,6 +80,16 @@ def run_deepfake_inference(video_path: str, max_frames: int = 30, interval_secon
     # Load model (untrained placeholder) and face detector
     detector = load_face_detector()
     model = build_deepfake_model(pretrained=False, device=device)
+    
+    # Load checkpoint if available
+    base_dir = Path(__file__).resolve().parent.parent.parent.parent
+    checkpoint_path = base_dir / "outputs" / "checkpoints" / "deepfake_resnet18.pth"
+    if checkpoint_path.exists():
+        model.load_state_dict(torch.load(str(checkpoint_path), map_location=device))
+        print(f"Loaded trained deepfake model from {checkpoint_path}")
+    else:
+        print("Warning: Trained deepfake model not found. Using untrained placeholder.")
+        
     model.eval()
     # Process each frame
     frame_results = []
@@ -100,7 +97,9 @@ def run_deepfake_inference(video_path: str, max_frames: int = 30, interval_secon
         res = infer_frame(f, model, detector, device=device)
         frame_results.append(res)
     summary = aggregate_video_results(frame_results)
-    return frame_results, summary
+    
+    # Final safety sanitize across returned dicts
+    return sanitize_for_serialization(frame_results), sanitize_for_serialization(summary)
 
 if __name__ == "__main__":
     import argparse

@@ -55,3 +55,20 @@ ai_detection/data/test/
 data/train/
 data/val/
 data/test/
+
+# Deepfake raw data (large video frames / face crops)
+ai_detection/data/deepfake/
+
+# Model checkpoints (large binary files — track separately via Git LFS if needed)
+ai_detection/outputs/checkpoints/*.pth
+outputs/checkpoints/*.pth
+
+# Training outputs (json/png plots — regenerable)
+ai_detection/outputs/deepfake_training_history.json
+ai_detection/outputs/evaluation/
+
+# Shared / cache dirs
+ai_detection/share/
+
+# Test fixture videos
+ai_detection/tests/fixtures/

@@ -1,89 +1,116 @@
-"""
-Utility helper functions: seed setting, device detection, and classification metric calculations.
-"""
+# ai_detection/src/utils.py
+"""Utility functions for model evaluation, metrics calculation, and API data serialization."""
 
-import os
-import random
-from typing import Dict, Union
-
+import logging
+from typing import Dict, Union, Any, List
 import numpy as np
 import torch
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, roc_auc_score
+
+logger = logging.getLogger(__name__)
 
 
-def set_seed(seed: int = 42) -> None:
+def sanitize_for_serialization(obj: Any) -> Any:
+    """Recursively convert NumPy scalars, NumPy arrays, and PyTorch tensors
+    into JSON-serializable standard Python types (int, float, bool, str, list, dict, None).
+
+    Parameters
+    ----------
+    obj : Any
+        Object or data structure to convert.
+
+    Returns
+    -------
+    Any
+        JSON-serializable version of the input object.
     """
-    Set random seeds across Python, NumPy, and PyTorch for reproducible runs.
-    """
-    random.seed(seed)
-    os.environ["PYTHONHASHSEED"] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+    if obj is None:
+        return None
+
+    # Handle PyTorch Tensors
+    if isinstance(obj, torch.Tensor):
+        detached = obj.detach().cpu()
+        if detached.ndim == 0:
+            # scalar tensor — convert directly and return
+            scalar = detached.item()
+            return bool(scalar) if isinstance(scalar, bool) else (int(scalar) if isinstance(scalar, int) else float(scalar))
+        else:
+            return sanitize_for_serialization(detached.numpy().tolist())
+
+    # Handle NumPy ndarrays
+    if isinstance(obj, np.ndarray):
+        return sanitize_for_serialization(obj.tolist())
+
+    # Handle NumPy scalar types (np.bool8 was removed in NumPy 2.x; np.bool_ covers it)
+    if isinstance(obj, np.bool_):
+        return bool(obj)
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        return float(obj)
+    if isinstance(obj, np.complexfloating):
+        return complex(obj)
+
+    # Handle standard collections recursively
+    if isinstance(obj, dict):
+        return {str(k): sanitize_for_serialization(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple, set)):
+        return [sanitize_for_serialization(v) for v in obj]
+
+    # Return standard primitives as-is
+    return obj
 
 
-def get_device(requested_device: Union[str, torch.device, None] = None) -> torch.device:
-    """
-    Resolves the torch.device, falling back to CPU if CUDA is unavailable.
-    """
-    if requested_device is not None:
-        device = torch.device(requested_device)
-        if device.type == "cuda" and not torch.cuda.is_available():
-            return torch.device("cpu")
-        return device
-    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-def compute_classification_metrics(
+def calculate_metrics(
     y_true: Union[list, np.ndarray, torch.Tensor],
     y_pred: Union[list, np.ndarray, torch.Tensor],
-    average: str = "binary"
+    y_prob: Union[list, np.ndarray, torch.Tensor, None] = None,
 ) -> Dict[str, float]:
-    """
-    Compute accuracy, precision, recall, and F1 score.
-    
-    Args:
-        y_true: Ground truth target labels (0 or 1).
-        y_pred: Predicted class labels (0 or 1).
-        average: Averaging strategy. Defaults to 'binary' (evaluates class 1: Real),
-                 or 'macro' for balanced multi-class aggregation.
-                 
-    Returns:
-        Dictionary containing:
-          - accuracy
-          - precision
-          - recall
-          - f1
-          - f1_macro
+    """Calculate classification metrics: accuracy, precision, recall, f1, and optional roc_auc.
+
+    Parameters
+    ----------
+    y_true : list or ndarray or Tensor
+        Ground truth binary labels (0 or 1).
+    y_pred : list or ndarray or Tensor
+        Predicted binary labels (0 or 1).
+    y_prob : list or ndarray or Tensor, optional
+        Predicted probabilities for the positive class (1).
+
+    Returns
+    -------
+    Dict[str, float]
+        Dictionary containing metric names and float values.
     """
     if isinstance(y_true, torch.Tensor):
-        y_true = y_true.detach().cpu().numpy()
+        y_true = y_true.cpu().numpy()
     if isinstance(y_pred, torch.Tensor):
-        y_pred = y_pred.detach().cpu().numpy()
+        y_pred = y_pred.cpu().numpy()
+    if isinstance(y_prob, torch.Tensor):
+        y_prob = y_prob.cpu().numpy()
 
-    y_true = np.asarray(y_true).ravel()
-    y_pred = np.asarray(y_pred).ravel()
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
 
     acc = float(accuracy_score(y_true, y_pred))
-
-    # Binary metrics (pos_label=1: Real)
-    prec_bin, rec_bin, f1_bin, _ = precision_recall_fscore_support(
-        y_true, y_pred, average="binary", zero_division=0, pos_label=1
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        y_true, y_pred, average="binary", zero_division=0
     )
 
-    # Macro metrics (average across 0: ai_generated and 1: real)
-    prec_macro, rec_macro, f1_macro, _ = precision_recall_fscore_support(
-        y_true, y_pred, average="macro", zero_division=0
-    )
-
-    return {
-        "accuracy": acc,
-        "precision": float(prec_macro if average == "macro" else prec_bin),
-        "recall": float(rec_macro if average == "macro" else rec_bin),
-        "f1": float(f1_macro if average == "macro" else f1_bin),
-        "f1_macro": float(f1_macro)
+    metrics = {
+        "accuracy": float(acc),
+        "precision": float(precision),
+        "recall": float(recall),
+        "f1_score": float(f1),
     }
+
+    if y_prob is not None:
+        y_prob = np.asarray(y_prob)
+        try:
+            auc = float(roc_auc_score(y_true, y_prob))
+            metrics["roc_auc"] = auc
+        except ValueError as e:
+            logger.warning(f"Could not calculate ROC-AUC: {e}")
+            metrics["roc_auc"] = 0.0
+
+    return metrics
