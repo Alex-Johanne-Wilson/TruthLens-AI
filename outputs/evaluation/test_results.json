@@ -1,0 +1,91 @@
+{
+  "dataset_size": 750,
+  "class_mapping": {
+    "ai_generated": 0,
+    "real": 1
+  },
+  "metrics": {
+    "accuracy": 0.99067,
+    "precision": 0.98677,
+    "recall": 0.99467,
+    "f1": 0.9907,
+    "roc_auc": 0.99932,
+    "macro_avg": {
+      "precision": 0.9907,
+      "recall": 0.99067,
+      "f1": 0.99067
+    },
+    "weighted_avg": {
+      "precision": 0.9907,
+      "recall": 0.99067,
+      "f1": 0.99067
+    }
+  },
+  "per_class": {
+    "ai_generated": {
+      "label": 0,
+      "precision": 0.99462,
+      "recall": 0.98667,
+      "f1": 0.99063,
+      "support": 375
+    },
+    "real": {
+      "label": 1,
+      "precision": 0.98677,
+      "recall": 0.99467,
+      "f1": 0.9907,
+      "support": 375
+    }
+  },
+  "confusion_matrix": {
+    "matrix": [
+      [
+        370,
+        5
+      ],
+      [
+        2,
+        373
+      ]
+    ],
+    "labels": [
+      "ai_generated",
+      "real"
+    ],
+    "true_negatives": 370,
+    "false_positives": 5,
+    "false_negatives": 2,
+    "true_positives": 373,
+    "correct_predictions": 743,
+    "incorrect_predictions": 7
+  },
+  "misclassified_count": 7,
+  "classification_report": {
+    "ai_generated": {
+      "precision": 0.9946236559139785,
+      "recall": 0.9866666666666667,
+      "f1-score": 0.9906291834002677,
+      "support": 375.0
+    },
+    "real": {
+      "precision": 0.9867724867724867,
+      "recall": 0.9946666666666667,
+      "f1-score": 0.9907038512616202,
+      "support": 375.0
+    },
+    "accuracy": 0.9906666666666667,
+    "macro avg": {
+      "precision": 0.9906980713432326,
+      "recall": 0.9906666666666667,
+      "f1-score": 0.9906665173309439,
+      "support": 750.0
+    },
+    "weighted avg": {
+      "precision": 0.9906980713432326,
+      "recall": 0.9906666666666667,
+      "f1-score": 0.9906665173309439,
+      "support": 750.0
+    }
+  },
+  "checkpoint_path": "C:\\Users\\Alex Wilson\\OneDrive\\Documents\\A.Projects\\Truthlens-AI\\ai_detection\\outputs\\checkpoints\\best_model.pth"
+}

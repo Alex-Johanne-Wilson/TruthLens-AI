@@ -1,0 +1,33 @@
+{
+  "dataset_name": "AI-vs-Real",
+  "source": "https://huggingface.co/datasets/Parveshiiii/AI-vs-Real",
+  "author": "Parveshiiii",
+  "random_seed": 42,
+  "label_mapping": {
+    "0": "ai_generated",
+    "1": "real"
+  },
+  "total_images": 5000,
+  "class_counts": {
+    "real": 2500,
+    "ai_generated": 2500
+  },
+  "splits": {
+    "train": {
+      "real": 1750,
+      "ai_generated": 1750,
+      "total": 3500
+    },
+    "val": {
+      "real": 375,
+      "ai_generated": 375,
+      "total": 750
+    },
+    "test": {
+      "real": 375,
+      "ai_generated": 375,
+      "total": 750
+    }
+  },
+  "preprocessing_applied": "None. Raw unmodified bytes extracted directly from source Parquet."
+}

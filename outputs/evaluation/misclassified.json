@@ -1,0 +1,79 @@
+[
+  {
+    "file_path": "C:\\Users\\Alex Wilson\\OneDrive\\Documents\\A.Projects\\Truthlens-AI\\ai_detection\\data\\test\\ai_generated\\ai_generated_2133.jpg",
+    "file_name": "ai_generated_2133.jpg",
+    "actual_label": 0,
+    "actual_class": "ai_generated",
+    "predicted_label": 1,
+    "predicted_class": "real",
+    "confidence": 0.701,
+    "prob_ai_generated": 0.299,
+    "prob_real": 0.701
+  },
+  {
+    "file_path": "C:\\Users\\Alex Wilson\\OneDrive\\Documents\\A.Projects\\Truthlens-AI\\ai_detection\\data\\test\\ai_generated\\ai_generated_2155.jpg",
+    "file_name": "ai_generated_2155.jpg",
+    "actual_label": 0,
+    "actual_class": "ai_generated",
+    "predicted_label": 1,
+    "predicted_class": "real",
+    "confidence": 0.8375,
+    "prob_ai_generated": 0.1625,
+    "prob_real": 0.8375
+  },
+  {
+    "file_path": "C:\\Users\\Alex Wilson\\OneDrive\\Documents\\A.Projects\\Truthlens-AI\\ai_detection\\data\\test\\ai_generated\\ai_generated_2163.jpg",
+    "file_name": "ai_generated_2163.jpg",
+    "actual_label": 0,
+    "actual_class": "ai_generated",
+    "predicted_label": 1,
+    "predicted_class": "real",
+    "confidence": 0.9757,
+    "prob_ai_generated": 0.0243,
+    "prob_real": 0.9757
+  },
+  {
+    "file_path": "C:\\Users\\Alex Wilson\\OneDrive\\Documents\\A.Projects\\Truthlens-AI\\ai_detection\\data\\test\\ai_generated\\ai_generated_2204.jpg",
+    "file_name": "ai_generated_2204.jpg",
+    "actual_label": 0,
+    "actual_class": "ai_generated",
+    "predicted_label": 1,
+    "predicted_class": "real",
+    "confidence": 0.7644,
+    "prob_ai_generated": 0.2356,
+    "prob_real": 0.7644
+  },
+  {
+    "file_path": "C:\\Users\\Alex Wilson\\OneDrive\\Documents\\A.Projects\\Truthlens-AI\\ai_detection\\data\\test\\ai_generated\\ai_generated_2324.jpg",
+    "file_name": "ai_generated_2324.jpg",
+    "actual_label": 0,
+    "actual_class": "ai_generated",
+    "predicted_label": 1,
+    "predicted_class": "real",
+    "confidence": 0.5561,
+    "prob_ai_generated": 0.4439,
+    "prob_real": 0.5561
+  },
+  {
+    "file_path": "C:\\Users\\Alex Wilson\\OneDrive\\Documents\\A.Projects\\Truthlens-AI\\ai_detection\\data\\test\\real\\real_2399.jpg",
+    "file_name": "real_2399.jpg",
+    "actual_label": 1,
+    "actual_class": "real",
+    "predicted_label": 0,
+    "predicted_class": "ai_generated",
+    "confidence": 0.6877,
+    "prob_ai_generated": 0.6877,
+    "prob_real": 0.3123
+  },
+  {
+    "file_path": "C:\\Users\\Alex Wilson\\OneDrive\\Documents\\A.Projects\\Truthlens-AI\\ai_detection\\data\\test\\real\\real_2442.jpg",
+    "file_name": "real_2442.jpg",
+    "actual_label": 1,
+    "actual_class": "real",
+    "predicted_label": 0,
+    "predicted_class": "ai_generated",
+    "confidence": 0.6024,
+    "prob_ai_generated": 0.6024,
+    "prob_real": 0.3976
+  }
+]
